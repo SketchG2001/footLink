@@ -52,6 +52,18 @@ class ApplicationService:
         return application
 
     @staticmethod
+    def list_accepted_by_club(db: Session, club_id: int) -> list[Application]:
+        return (
+            db.query(Application)
+            .filter(
+                Application.club_id == club_id,
+                Application.status == ApplicationStatus.ACCEPTED,
+            )
+            .order_by(Application.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
     def already_applied(db: Session, player_id: int, club_id: int) -> bool:
         return (
             db.query(Application)

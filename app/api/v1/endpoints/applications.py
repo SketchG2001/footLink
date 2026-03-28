@@ -8,6 +8,7 @@ from app.schemas.application import (
     ApplicationCreate,
     ApplicationResponse,
     ApplicationUpdateStatus,
+    RosterPlayerResponse,
 )
 from app.services.application_service import application_service
 from app.services.user_service import user_service
@@ -77,6 +78,30 @@ def list_applications(
             detail="Only players and clubs can view applications",
         )
     return [_to_response(a) for a in apps]
+
+
+@router.get("/roster", response_model=list[RosterPlayerResponse])
+def get_club_roster(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.CLUB)),
+):
+    """List players who have been accepted by this club."""
+    accepted = application_service.list_accepted_by_club(db, club_id=current_user.id)
+    roster = []
+    for app in accepted:
+        player = app.player
+        profile = player.profile if player else None
+        roster.append(
+            RosterPlayerResponse(
+                user_id=player.id,
+                email=player.email,
+                name=profile.name if profile else None,
+                age=profile.age if profile else None,
+                position=profile.position if profile else None,
+                joined_at=app.updated_at or app.created_at,
+            )
+        )
+    return roster
 
 
 @router.put("/{application_id}", response_model=ApplicationResponse)

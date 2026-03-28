@@ -35,16 +35,17 @@ def list_contacts(
 @router.get("/contacts/search", response_model=list[ContactResponse])
 def search_users_by_email(
     q: str = Query(..., min_length=1, description="Email search term"),
+    role: str | None = Query(None, description="Filter by role (PLAYER, AGENT, CLUB)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Search users by email for starting a conversation."""
-    users = (
-        db.query(User)
-        .filter(User.email.ilike(f"%{q}%"), User.id != current_user.id)
-        .limit(10)
-        .all()
+    """Search users by email, optionally filtered by role."""
+    query = db.query(User).filter(
+        User.email.ilike(f"%{q}%"), User.id != current_user.id
     )
+    if role:
+        query = query.filter(User.role == role.upper())
+    users = query.limit(10).all()
     return [ContactResponse(id=u.id, email=u.email, role=u.role.value) for u in users]
 
 

@@ -24,8 +24,25 @@ class ProfileService:
         return profile
 
     @staticmethod
+    def create_from_dict(db: Session, user_id: int, fields: dict) -> Profile:
+        profile = Profile(user_id=user_id, **fields)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+        return profile
+
+    @staticmethod
     def update(db: Session, profile: Profile, data: ProfileUpdate) -> Profile:
         for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(profile, field, value)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+        return profile
+
+    @staticmethod
+    def update_from_dict(db: Session, profile: Profile, fields: dict) -> Profile:
+        for field, value in fields.items():
             setattr(profile, field, value)
         db.add(profile)
         db.commit()

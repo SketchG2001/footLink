@@ -27,3 +27,12 @@ class ApplicationResponse(BaseModel):
     updated_at: Optional[datetime] = None
     player_email: Optional[str] = None
     club_email: Optional[str] = None
+
+
+class RosterPlayerResponse(BaseModel):
+    user_id: int
+    email: str
+    name: Optional[str] = None
+    age: Optional[int] = None
+    position: Optional[str] = None
+    joined_at: datetime

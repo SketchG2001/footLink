@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { useState, useEffect, useRef, useCallback, FormEvent } from "react";
 import api from "@/lib/api";
 
 interface Message {
@@ -100,6 +100,23 @@ export default function MessagesPage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const pollConversation = useCallback(async () => {
+    if (!activeChat) return;
+    try {
+      const { data } = await api.get(`/messages/${activeChat.id}`);
+      setMessages((prev) => {
+        if (data.length !== prev.length) return data;
+        return prev;
+      });
+    } catch {}
+  }, [activeChat]);
+
+  useEffect(() => {
+    if (!activeChat) return;
+    const interval = setInterval(pollConversation, 5000);
+    return () => clearInterval(interval);
+  }, [activeChat, pollConversation]);
 
   return (
     <div className="mx-auto flex max-w-4xl gap-4" style={{ height: "calc(100vh - 10rem)" }}>
@@ -216,8 +233,14 @@ export default function MessagesPage() {
             </form>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-sm text-gray-400">Select a conversation or search for a user to start chatting.</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+            <div className="rounded-full bg-gray-100 p-4">
+              <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+              </svg>
+            </div>
+            <p className="text-sm font-medium text-gray-500">No conversation selected</p>
+            <p className="text-xs text-gray-400">Search for a user or pick a contact from the sidebar to start chatting.</p>
           </div>
         )}
       </div>

@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import api from "@/lib/api";
+import UserSearchDropdown from "@/components/UserSearchDropdown";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { useAutoDismiss } from "@/lib/useAutoDismiss";
 
 interface Document {
   id: number;
@@ -34,6 +37,11 @@ export default function DocumentsPage() {
   const [viewDoc, setViewDoc] = useState<Document | null>(null);
   const [viewUrl, setViewUrl] = useState<string | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
+
+  const [signDocId, setSignDocId] = useState<number | null>(null);
+  const [signing, setSigning] = useState(false);
+
+  useAutoDismiss(message, setMessage);
 
   const fetchDocs = async () => {
     try {
@@ -79,15 +87,20 @@ export default function DocumentsPage() {
     }
   };
 
-  const handleSign = async (docId: number) => {
+  const handleSignConfirmed = async () => {
+    if (!signDocId) return;
+    setSigning(true);
     setMessage({ text: "", ok: false });
     try {
-      await api.post(`/documents/${docId}/sign`);
-      setMessage({ text: "Document signed", ok: true });
+      await api.post(`/documents/${signDocId}/sign`);
+      setMessage({ text: "Document signed successfully", ok: true });
+      setSignDocId(null);
       await fetchDocs();
     } catch (err: any) {
       const d = err.response?.data;
       setMessage({ text: d?.message || d?.detail || "Signing failed", ok: false });
+    } finally {
+      setSigning(false);
     }
   };
 
@@ -136,6 +149,20 @@ export default function DocumentsPage() {
     setViewDoc(null);
     setViewUrl(null);
   }, [viewUrl]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (viewDoc) closeViewer();
+        else if (shareDocId !== null) {
+          setShareDocId(null);
+          setShareUserId("");
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [viewDoc, shareDocId, closeViewer]);
 
   const handleDownload = () => {
     if (!viewUrl || !viewDoc) return;
@@ -294,16 +321,15 @@ export default function DocumentsPage() {
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <h2 className="text-lg font-semibold text-gray-900">Share Document</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Enter the user ID to share this document with.
+              Search for a user by email to share this document.
             </p>
-            <input
-              type="number"
-              min={1}
-              placeholder="User ID"
-              value={shareUserId}
-              onChange={(e) => setShareUserId(e.target.value)}
-              className="mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+            <div className="mt-4">
+              <UserSearchDropdown
+                placeholder="Search user by email..."
+                resetKey={shareDocId}
+                onSelect={(user) => setShareUserId(String(user.id))}
+              />
+            </div>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => {
@@ -326,18 +352,44 @@ export default function DocumentsPage() {
         </div>
       )}
 
+      {/* Sign Confirmation */}
+      <ConfirmDialog
+        open={signDocId !== null}
+        title="Sign Document"
+        message="This action will apply your electronic signature to this document. This is a legally binding action and cannot be undone. Do you want to proceed?"
+        confirmLabel="Sign Document"
+        variant="warning"
+        loading={signing}
+        onConfirm={handleSignConfirmed}
+        onCancel={() => setSignDocId(null)}
+      />
+
       {/* Document Viewer Modal */}
       {renderViewer()}
 
       {/* Document List */}
       {loading ? (
-        <p className="mt-6 text-gray-500">Loading documents...</p>
+        <div className="mt-8 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-100" />
+          ))}
+        </div>
       ) : docs.length === 0 ? (
-        <p className="mt-6 text-gray-500">
-          {isSharedTab
-            ? "No documents have been shared with you yet."
-            : "No documents yet. Upload one above."}
-        </p>
+        <div className="mt-10 flex flex-col items-center gap-3 text-center">
+          <div className="rounded-full bg-gray-100 p-4">
+            <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-gray-500">
+            {isSharedTab ? "No shared documents yet" : "No documents yet"}
+          </p>
+          <p className="text-xs text-gray-400">
+            {isSharedTab
+              ? "Documents shared with you by other users will appear here."
+              : "Upload your first document using the form above."}
+          </p>
+        </div>
       ) : (
         <div className="mt-4 overflow-hidden rounded-lg border border-gray-200">
           <table className="w-full text-left text-sm">
@@ -389,7 +441,7 @@ export default function DocumentsPage() {
                     )}
                     {doc.status === "UPLOADED" && (
                       <button
-                        onClick={() => handleSign(doc.id)}
+                        onClick={() => setSignDocId(doc.id)}
                         className="rounded-md bg-accent px-3 py-1 text-xs font-medium text-gray-900 transition-colors hover:bg-accent-light"
                       >
                         Sign

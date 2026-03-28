@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import api from "@/lib/api";
+import { useAutoDismiss } from "@/lib/useAutoDismiss";
 
 interface UserData {
   id: number;
@@ -16,6 +17,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: "", ok: false });
+
+  useAutoDismiss(message, setMessage);
 
   useEffect(() => {
     api

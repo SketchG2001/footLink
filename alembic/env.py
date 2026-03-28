@@ -8,6 +8,7 @@ from alembic import context
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
+import app.models  # noqa: F401  — register all models with Base.metadata
 from app.core.config import settings
 from app.core.database import Base
 

@@ -27,7 +27,12 @@ export default function SignupPage() {
 
     try {
       await api.post("/auth/signup", form);
-      router.push("/login");
+      const { data } = await api.post("/auth/login", {
+        email: form.email,
+        password: form.password,
+      });
+      localStorage.setItem("token", data.access_token);
+      router.push("/dashboard");
     } catch (err: any) {
       const msg = err.response?.data;
       if (msg?.errors) {
@@ -111,7 +116,7 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-light disabled:opacity-50"
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
 

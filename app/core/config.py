@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 from pydantic_settings import BaseSettings
 
@@ -15,20 +14,24 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    BACKEND_CORS_ORIGINS: List[str] = []
+    BACKEND_CORS_ORIGINS: str = ""
 
     UPLOAD_DIR: str = "uploads"
 
     ENVIRONMENT: str = "development"
 
+    @property
+    def cors_origins(self) -> list[str]:
+        if not self.BACKEND_CORS_ORIGINS:
+            return []
+        raw = self.BACKEND_CORS_ORIGINS.strip()
+        if raw.startswith("["):
+            return json.loads(raw)
+        return [o.strip() for o in raw.split(",") if o.strip()]
+
     class Config:
         env_file = ".env"
         case_sensitive = True
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if isinstance(self.BACKEND_CORS_ORIGINS, str):
-            self.BACKEND_CORS_ORIGINS = json.loads(self.BACKEND_CORS_ORIGINS)
 
 
 settings = Settings()
