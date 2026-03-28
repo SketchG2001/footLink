@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.user import User, UserRole
 from app.models.profile import Profile
+from app.models.user import User, UserRole
 from app.schemas.profile import ProfileWithOwner
 from app.utils.dependencies import require_roles
 

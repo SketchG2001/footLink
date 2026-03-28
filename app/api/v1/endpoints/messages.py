@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.message import MessageSend, MessageResponse, ContactResponse
+from app.schemas.message import ContactResponse, MessageResponse, MessageSend
 from app.services.message_service import message_service
 from app.services.user_service import user_service
 from app.utils.dependencies import get_current_active_user
@@ -44,24 +45,28 @@ def search_users_by_email(
         .limit(10)
         .all()
     )
-    return [
-        ContactResponse(id=u.id, email=u.email, role=u.role.value)
-        for u in users
-    ]
+    return [ContactResponse(id=u.id, email=u.email, role=u.role.value) for u in users]
 
 
-@router.post("/send", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/send", response_model=MessageResponse, status_code=status.HTTP_201_CREATED
+)
 def send_message(
     body: MessageSend,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     if body.receiver_id == current_user.id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot send a message to yourself")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot send a message to yourself",
+        )
 
     receiver = user_service.get_by_id(db, user_id=body.receiver_id)
     if not receiver:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Receiver not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Receiver not found"
+        )
 
     msg = message_service.send(db, sender_id=current_user.id, data=body)
     return _to_response(msg)
@@ -75,7 +80,11 @@ def get_conversation(
 ):
     peer = user_service.get_by_id(db, user_id=user_id)
     if not peer:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
-    messages = message_service.get_conversation(db, user_a=current_user.id, user_b=user_id)
+    messages = message_service.get_conversation(
+        db, user_a=current_user.id, user_b=user_id
+    )
     return [_to_response(m) for m in messages]

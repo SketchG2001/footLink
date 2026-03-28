@@ -24,6 +24,7 @@ const QUICK_LINKS: QuickLink[] = [
   { label: "Player Database", href: "/players", desc: "Search player profiles", roles: ["CLUB", "AGENT"] },
   { label: "My Roster", href: "/agents", desc: "Manage your players", roles: ["AGENT"] },
   { label: "Applications", href: "/applications", desc: "Apply to clubs or review applications", roles: ["PLAYER", "CLUB"] },
+  { label: "Settings", href: "/settings", desc: "Update email or password" },
 ];
 
 export default function DashboardPage() {

@@ -2,9 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.user import User, UserRole
 from app.models.application import ApplicationStatus
-from app.schemas.application import ApplicationCreate, ApplicationUpdateStatus, ApplicationResponse
+from app.models.user import User, UserRole
+from app.schemas.application import (
+    ApplicationCreate,
+    ApplicationResponse,
+    ApplicationUpdateStatus,
+)
 from app.services.application_service import application_service
 from app.services.user_service import user_service
 from app.utils.dependencies import get_current_active_user, require_roles
@@ -26,7 +30,9 @@ def _to_response(app) -> ApplicationResponse:
     )
 
 
-@router.post("/", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", response_model=ApplicationResponse, status_code=status.HTTP_201_CREATED
+)
 def apply_to_club(
     body: ApplicationCreate,
     db: Session = Depends(get_db),
@@ -35,12 +41,21 @@ def apply_to_club(
     """Player applies to a club."""
     club = user_service.get_by_id(db, user_id=body.club_id)
     if not club:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Club not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Club not found"
+        )
     if club.role != UserRole.CLUB:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Target user is not a club")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Target user is not a club"
+        )
 
-    if application_service.already_applied(db, player_id=current_user.id, club_id=body.club_id):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You already have a pending application to this club")
+    if application_service.already_applied(
+        db, player_id=current_user.id, club_id=body.club_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You already have a pending application to this club",
+        )
 
     app = application_service.create(db, player_id=current_user.id, data=body)
     return _to_response(app)
@@ -57,7 +72,10 @@ def list_applications(
     elif current_user.role == UserRole.CLUB:
         apps = application_service.list_by_club(db, club_id=current_user.id)
     else:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only players and clubs can view applications")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only players and clubs can view applications",
+        )
     return [_to_response(a) for a in apps]
 
 
@@ -71,11 +89,19 @@ def update_application_status(
     """Club accepts or rejects an application."""
     app = application_service.get_by_id(db, application_id=application_id)
     if not app:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Application not found"
+        )
     if app.club_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your application to review")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not your application to review",
+        )
     if app.status != ApplicationStatus.PENDING:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Application already processed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Application already processed",
+        )
 
     app = application_service.update_status(db, application=app, new_status=body.status)
     return _to_response(app)

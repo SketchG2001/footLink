@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
 from app.models.user import User, UserRole
-from app.schemas.profile import ProfileCreate, ProfileUpdate, ProfileResponse, ProfileWithOwner
+from app.schemas.profile import (
+    ProfileCreate,
+    ProfileResponse,
+    ProfileUpdate,
+    ProfileWithOwner,
+)
 from app.services.profile_service import profile_service
-from app.utils.dependencies import get_current_active_user, require_roles
+from app.utils.dependencies import require_roles
 
 router = APIRouter()
 
@@ -12,11 +18,16 @@ router = APIRouter()
 @router.get("/me", response_model=ProfileResponse)
 def get_my_profile(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)),
+    current_user: User = Depends(
+        require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)
+    ),
 ):
     profile = profile_service.get_by_user_id(db, user_id=current_user.id)
     if not profile:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found. Create one first.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found. Create one first.",
+        )
     return profile
 
 
@@ -24,11 +35,16 @@ def get_my_profile(
 def create_my_profile(
     data: ProfileCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)),
+    current_user: User = Depends(
+        require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)
+    ),
 ):
     existing = profile_service.get_by_user_id(db, user_id=current_user.id)
     if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Profile already exists. Use PUT to update.")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Profile already exists. Use PUT to update.",
+        )
     return profile_service.create(db, user_id=current_user.id, data=data)
 
 
@@ -36,11 +52,16 @@ def create_my_profile(
 def update_my_profile(
     data: ProfileUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)),
+    current_user: User = Depends(
+        require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)
+    ),
 ):
     profile = profile_service.get_by_user_id(db, user_id=current_user.id)
     if not profile:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found. Create one first.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile not found. Create one first.",
+        )
     return profile_service.update(db, profile=profile, data=data)
 
 
@@ -48,11 +69,15 @@ def update_my_profile(
 def get_profile_by_id(
     profile_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)),
+    current_user: User = Depends(
+        require_roles(UserRole.PLAYER, UserRole.AGENT, UserRole.CLUB)
+    ),
 ):
     profile = profile_service.get_by_id(db, profile_id=profile_id)
     if not profile:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found"
+        )
 
     return ProfileWithOwner(
         id=profile.id,

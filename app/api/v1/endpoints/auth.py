@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
 from app.core.database import get_db
 from app.core.security import create_access_token
-from app.schemas.user import UserSignup, UserResponse, UserLogin
 from app.schemas.token import Token
+from app.schemas.user import UserLogin, UserResponse, UserSignup
 from app.services.user_service import user_service
 
 router = APIRouter()
@@ -22,7 +23,9 @@ def _authenticate_and_issue_token(db: Session, email: str, password: str) -> dic
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 def signup(user_in: UserSignup, db: Session = Depends(get_db)):
     """
     Register a new user with email, password, and role.
@@ -52,7 +55,9 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
 
     Use the returned token in the Authorization header as: `Bearer <token>`
     """
-    return _authenticate_and_issue_token(db, user_credentials.email, user_credentials.password)
+    return _authenticate_and_issue_token(
+        db, user_credentials.email, user_credentials.password
+    )
 
 
 @router.post("/token", response_model=Token, include_in_schema=False)

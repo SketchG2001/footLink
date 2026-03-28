@@ -1,5 +1,7 @@
 from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from app.models.profile import Profile
 from app.schemas.profile import ProfileCreate, ProfileUpdate
 

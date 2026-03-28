@@ -1,19 +1,27 @@
 import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.config import settings
-from app.core.logging_config import setup_logging
-from app.core.exceptions import register_exception_handlers
+
 from app.api.v1.router import api_router
+from app.core.config import settings
+from app.core.exceptions import register_exception_handlers
+from app.core.logging_config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
 
 TAGS_METADATA = [
-    {"name": "authentication", "description": "User signup, login, and JWT token management."},
+    {
+        "name": "authentication",
+        "description": "User signup, login, and JWT token management.",
+    },
     {"name": "users", "description": "Authenticated user account operations."},
     {"name": "profile", "description": "Player / Agent / Club profile management."},
-    {"name": "documents", "description": "Document upload, sharing, and e-signing workflows."},
+    {
+        "name": "documents",
+        "description": "Document upload, sharing, and e-signing workflows.",
+    },
     {"name": "messages", "description": "Direct messaging between platform users."},
     {"name": "agents", "description": "Agent-player roster management."},
     {"name": "players", "description": "Player database search for clubs and agents."},

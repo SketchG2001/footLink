@@ -1,6 +1,8 @@
 import enum
-from sqlalchemy import Column, String, Enum
+
+from sqlalchemy import Column, Enum, String
 from sqlalchemy.orm import relationship
+
 from app.models.base import BaseModel
 
 
@@ -17,7 +19,9 @@ class User(BaseModel):
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False)
 
-    profile = relationship("Profile", back_populates="owner", uselist=False, lazy="joined")
+    profile = relationship(
+        "Profile", back_populates="owner", uselist=False, lazy="joined"
+    )
     documents = relationship("Document", back_populates="owner", lazy="dynamic")
 
     managed_players = relationship(

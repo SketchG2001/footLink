@@ -1,5 +1,5 @@
-import uuid
 import shutil
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -7,7 +7,7 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.document import Document, DocumentStatus, DocumentSignature, document_shares
+from app.models.document import Document, DocumentSignature, DocumentStatus
 from app.models.user import User
 
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg"}
@@ -54,7 +54,12 @@ class DocumentService:
 
     @staticmethod
     def list_by_owner(db: Session, owner_id: int) -> list[Document]:
-        return db.query(Document).filter(Document.owner_id == owner_id).order_by(Document.created_at.desc()).all()
+        return (
+            db.query(Document)
+            .filter(Document.owner_id == owner_id)
+            .order_by(Document.created_at.desc())
+            .all()
+        )
 
     @staticmethod
     def list_shared_with(db: Session, user_id: int) -> list[Document]:

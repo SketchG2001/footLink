@@ -1,5 +1,7 @@
 from typing import Optional
+
 from sqlalchemy.orm import Session
+
 from app.models.application import Application, ApplicationStatus
 from app.schemas.application import ApplicationCreate
 
@@ -41,7 +43,9 @@ class ApplicationService:
         )
 
     @staticmethod
-    def update_status(db: Session, application: Application, new_status: ApplicationStatus) -> Application:
+    def update_status(
+        db: Session, application: Application, new_status: ApplicationStatus
+    ) -> Application:
         application.status = new_status
         db.commit()
         db.refresh(application)

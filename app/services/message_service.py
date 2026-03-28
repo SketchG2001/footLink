@@ -1,14 +1,17 @@
-from sqlalchemy import or_, and_, union_all, literal_column
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
+
 from app.models.message import Message
 from app.models.user import User
-from app.schemas.message import MessageSend, ContactResponse
+from app.schemas.message import ContactResponse, MessageSend
 
 
 class MessageService:
     @staticmethod
     def send(db: Session, sender_id: int, data: MessageSend) -> Message:
-        msg = Message(sender_id=sender_id, receiver_id=data.receiver_id, content=data.content)
+        msg = Message(
+            sender_id=sender_id, receiver_id=data.receiver_id, content=data.content
+        )
         db.add(msg)
         db.commit()
         db.refresh(msg)
@@ -48,8 +51,7 @@ class MessageService:
             .all()
         )
         return [
-            ContactResponse(id=u.id, email=u.email, role=u.role.value)
-            for u in peers
+            ContactResponse(id=u.id, email=u.email, role=u.role.value) for u in peers
         ]
 
 

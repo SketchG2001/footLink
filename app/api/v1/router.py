@@ -1,5 +1,15 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, profile, documents, messages, agents, players, applications
+
+from app.api.v1.endpoints import (
+    agents,
+    applications,
+    auth,
+    documents,
+    messages,
+    players,
+    profile,
+    users,
+)
 
 api_router = APIRouter()
 
@@ -10,4 +20,6 @@ api_router.include_router(documents.router, prefix="/documents", tags=["document
 api_router.include_router(messages.router, prefix="/messages", tags=["messages"])
 api_router.include_router(agents.router, prefix="/agents", tags=["agents"])
 api_router.include_router(players.router, prefix="/players", tags=["players"])
-api_router.include_router(applications.router, prefix="/applications", tags=["applications"])
+api_router.include_router(
+    applications.router, prefix="/applications", tags=["applications"]
+)

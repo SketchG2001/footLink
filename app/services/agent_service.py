@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.models.user import User, UserRole
-from app.models.profile import agent_players
+
+from app.models.user import User
 
 
 class AgentService:

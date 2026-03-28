@@ -12,4 +12,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Players", href: "/players", roles: ["CLUB", "AGENT"] },
   { label: "My Roster", href: "/agents", roles: ["AGENT"] },
   { label: "Applications", href: "/applications", roles: ["PLAYER", "CLUB"] },
+  { label: "Settings", href: "/settings" },
 ];
