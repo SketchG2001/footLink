@@ -20,6 +20,8 @@ TAGS_METADATA = [
     {"name": "applications", "description": "Player-to-club application workflow."},
 ]
 
+_is_dev = settings.ENVIRONMENT == "development"
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
@@ -28,10 +30,10 @@ app = FastAPI(
         "It combines player profiles, secure document management with electronic signatures, "
         "and structured communication — all through a scalable, API-first architecture."
     ),
-    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_tags=TAGS_METADATA,
+    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json" if _is_dev else None,
+    docs_url="/docs" if _is_dev else None,
+    redoc_url="/redoc" if _is_dev else None,
+    openapi_tags=TAGS_METADATA if _is_dev else None,
 )
 
 register_exception_handlers(app)
@@ -52,11 +54,10 @@ logger.info("FootLink %s started [env=%s]", settings.VERSION, settings.ENVIRONME
 
 @app.get("/", tags=["health"])
 def root():
-    return {
-        "message": "Welcome to FootLink API",
-        "version": settings.VERSION,
-        "docs": "/docs",
-    }
+    resp = {"message": "Welcome to FootLink API", "version": settings.VERSION}
+    if _is_dev:
+        resp["docs"] = "/docs"
+    return resp
 
 
 @app.get("/health", tags=["health"])
